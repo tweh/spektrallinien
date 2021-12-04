@@ -1,0 +1,364 @@
+% !TeX program = xelatex
+\documentclass{article}
+
+\usepackage{geometry}
+\geometry{
+   paperwidth=847mm,
+   paperheight=1195mm,
+   margin=33mm,
+}
+\setlength{\parindent}{0pt}
+
+\usepackage{etoolbox}
+\usepackage{xcolor}
+   \pagecolor{black}
+\usepackage{tikz}
+\usepackage{csvsimple-l3}
+\usepackage{fontspec}
+   \setmainfont[
+      FontFace = {lt}{n}{* Light},
+      FontFace = {lt}{it}{* Light Italic},
+   ]{FiraGO}
+   \DeclareRobustCommand{\ltseries}{\fontseries{lt}\selectfont}
+   \DeclareTextFontCommand{\textlt}{\ltseries}
+
+% Tikz-Stile
+\tikzset{
+   % allg. Einstellungen für alle Nodes
+   every node/.style = {
+      inner sep = 0pt,
+      outer sep = 0pt,
+   },
+   % Node für Element-Symbol und -Name
+   symbol and name/.style = {
+      white,
+      font = \fontsize{20bp}{20bp}\selectfont,
+      anchor = base west,
+   },
+   % Linienbreite
+   line width = 1mm,
+   % Stile für Skalenteile (in drei Abstufungen)
+   large tick/.style = {
+      white,
+   },
+   medium tick/.style = {
+      large tick,
+   },
+   small tick/.style = {
+      large tick,
+   },
+   % Stil für Skalenbeschriftung (nur bei Large)
+   tick label/.style = {
+      white,
+      font = \fontsize{14bp}{14bp}\selectfont,
+   },
+}
+
+\ExplSyntaxOn
+
+% Variablen und Konstanten
+%% Hilfsvariable für aktuelle Wellenlänge
+\tl_new:N \l_splns_wavelength_in_nm_input_tl
+%% Höhe des Spektrums
+\dim_const:Nn \c_splns_spectrum_height_dim { 20mm }
+%% Breite des Spektrums
+\fp_const:Nn \c_splns_spectrum_width_in_mm_fp
+   { \dim_to_decimal_in_unit:nn { \textwidth - 1mm } { 1mm } }% in mm
+%% Konstante für Lichtgeschwindigkeit
+\fp_const:Nn \c_splns_lightspeed_in_m_per_s_fp { 2.99792e8 }% in m/s
+%% Variablen für Wellenlängen
+%%% Schrittweiten für Skala
+\fp_const:Nn \c_splns_wavelength_in_nm_large_step_fp { 50 }% in nm
+\fp_const:Nn \c_splns_wavelength_in_nm_medium_step_fp { 10 }% in nm
+\fp_const:Nn \c_splns_wavelength_in_nm_small_step_fp { 1 }% in nm
+%%% Minimum
+\fp_const:Nn \c_splns_wavelength_in_nm_min_fp { 350 }% in nm
+%%% Maximum
+\fp_const:Nn \c_splns_wavelength_in_nm_max_fp { 800 }% in nm
+%%% Skalenteil in mm berechnen
+\fp_const:Nn \c_splns_wavelength_xunit_in_mm_fp {% in mm
+   \c_splns_spectrum_width_in_mm_fp % Gesamtbreite in mm
+   /
+   (\c_splns_wavelength_in_nm_max_fp - \c_splns_wavelength_in_nm_min_fp)
+}
+% Variablen für Frequenzen (abhängig von Wellenlängeneinstellungen)
+%%% Skalenteile
+\fp_const:Nn \c_splns_frequency_in_THz_large_step_fp { 50 }% in THz
+\fp_const:Nn \c_splns_frequency_in_THz_medium_step_fp { 25 }% in THz
+\fp_const:Nn \c_splns_frequency_in_THz_small_step_fp { 5 }% in THz
+%%% Minimum
+\fp_const:Nn \c_splns_frequency_in_THz_min_fp {% in THz
+   \c_splns_lightspeed_in_m_per_s_fp
+   /
+   ( \c_splns_wavelength_in_nm_max_fp * 1e-9 )
+   * 1e-12
+}
+% Minimum auf nächsten Skalenteil gerundet
+\pgfmathparse  {
+   \fp_use:N \c_splns_frequency_in_THz_min_fp
+   -
+   mod (
+      \fp_use:N \c_splns_frequency_in_THz_min_fp
+      ,
+      \fp_use:N \c_splns_frequency_in_THz_large_step_fp
+   )
+   +
+   \fp_use:N \c_splns_frequency_in_THz_large_step_fp
+}
+\fp_const:Nn \c_splns_frequency_in_THz_min_rounded_fp {
+   \pgfmathresult
+}
+%%% Maximum
+\fp_const:Nn \c_splns_frequency_in_THz_max_fp {% in THz
+   \c_splns_lightspeed_in_m_per_s_fp
+   /
+   ( \c_splns_wavelength_in_nm_min_fp * 1e-9 )
+   * 1e-12
+}
+%%% Maximum auf nächsten Skalenteil gerundet
+\pgfmathparse  {
+   \fp_use:N \c_splns_frequency_in_THz_max_fp
+   -
+   mod (
+      \fp_use:N \c_splns_frequency_in_THz_max_fp
+      ,
+      \fp_use:N \c_splns_frequency_in_THz_large_step_fp
+   )
+   -
+   \fp_use:N \c_splns_frequency_in_THz_large_step_fp
+}
+\fp_const:Nn \c_splns_frequency_in_THz_max_rounded_fp {
+   \pgfmathresult
+}
+%%% Skalenteil in mm berechnen
+\fp_const:Nn \c_splns_frequency_xunit_in_mm_fp {% in mm
+   \c_splns_spectrum_width_in_mm_fp % Gesamtbreite in mm
+   /
+   (\c_splns_frequency_in_THz_max_fp - \c_splns_frequency_in_THz_min_fp)
+}
+
+% Befehl zum Umrechnen f -> λ mit direkter Ausgabe
+% - #1: Frequenz f in THz
+\cs_new:Nn \splns_use_frequency_in_THz_as_wavelength_in_nm:n {
+   \fp_eval:n { \c_splns_lightspeed_in_m_per_s_fp / ( #1 * 1e12 ) * 1e9 }
+}
+\cs_generate_variant:Nn \splns_use_frequency_in_THz_as_wavelength_in_nm:n { V }
+
+% Befehl zum Ausgeben des Labels, des Rahmens und der Skala
+% - #1: Label
+\cs_new:Nn \splns_draw_nam_frame_and_scale:n {
+   % Symbol und Name
+   \node [ symbol~and~name ]
+      at (\fp_use:N \c_splns_wavelength_in_nm_max_fp,4.5mm)
+      {
+         \strut
+         #1
+      };
+   % Rahmen
+   \draw [white]
+      (\fp_use:N \c_splns_wavelength_in_nm_min_fp,0)
+      rectangle
+      (\fp_use:N \c_splns_wavelength_in_nm_max_fp,-\dim_use:N \c_splns_spectrum_height_dim);
+   % Skala Wellenlänge
+   %% große Teilung
+   \fp_step_inline:nnnn
+      { \c_splns_wavelength_in_nm_min_fp + \c_splns_wavelength_in_nm_large_step_fp }
+      { \c_splns_wavelength_in_nm_large_step_fp }
+      { \c_splns_wavelength_in_nm_max_fp - \c_splns_wavelength_in_nm_large_step_fp}
+      {
+         \draw [large~tick] (##1,0) -- (##1,3)
+            node [large~tick, above=1.5mm, anchor=base] { \strut ##1 };
+      }
+   %% mittlere Teilung
+   \fp_step_inline:nnnn
+      { \c_splns_wavelength_in_nm_min_fp }
+      { \c_splns_wavelength_in_nm_medium_step_fp }
+      { \c_splns_wavelength_in_nm_max_fp}
+      {
+         \draw [medium~tick] (##1,0) -- (##1,3);
+      }
+   %% kleine Teilung
+   \fp_step_inline:nnnn
+      { \c_splns_wavelength_in_nm_min_fp }
+      { \c_splns_wavelength_in_nm_small_step_fp }
+      { \c_splns_wavelength_in_nm_max_fp}
+      {
+         \draw [small~tick] (##1,0) -- (##1,1.5);
+      }
+   %% Größe und Einheit
+   \node at (\fp_use:N \c_splns_wavelength_in_nm_min_fp,4.5mm) [large~tick, anchor=base~east] {
+      \strut \bfseries \textit{λ}~in~nm
+   };
+   % Skala Frequenz
+   %% große Teilung
+   \fp_step_inline:nnnn
+      { \c_splns_frequency_in_THz_min_rounded_fp }
+      { \c_splns_frequency_in_THz_large_step_fp }
+      { \c_splns_frequency_in_THz_max_rounded_fp }
+      {
+         \draw [large~tick]
+            (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
+               -\dim_use:N \c_splns_spectrum_height_dim)
+            -- ++(0,-3)
+            node [large~tick, below=3.75mm, anchor = base] { \strut ##1 };
+      }
+   %% mittlere Teilung
+   \fp_step_inline:nnnn
+      { \c_splns_frequency_in_THz_min_rounded_fp }
+      { \c_splns_frequency_in_THz_medium_step_fp }
+      { \c_splns_frequency_in_THz_max_rounded_fp}
+      {
+         \draw [medium~tick]
+            (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
+               -\dim_use:N \c_splns_spectrum_height_dim)
+            -- ++(0,-3);
+      }
+   \fp_step_inline:nnnn
+      { \c_splns_frequency_in_THz_min_rounded_fp }
+      { -\c_splns_frequency_in_THz_medium_step_fp }
+      { \c_splns_frequency_in_THz_min_fp}
+      {
+         \draw [medium~tick]
+            (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
+               -\dim_use:N \c_splns_spectrum_height_dim)
+            -- ++(0,-3);
+      }
+   \fp_step_inline:nnnn
+      { \c_splns_frequency_in_THz_max_rounded_fp }
+      { \c_splns_frequency_in_THz_medium_step_fp }
+      { \c_splns_frequency_in_THz_max_fp}
+      {
+         \draw [medium~tick]
+            (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
+               -\dim_use:N \c_splns_spectrum_height_dim)
+            -- ++(0,-3);
+      }
+   %% kleine Teilung
+   \fp_step_inline:nnnn
+      { \c_splns_frequency_in_THz_min_rounded_fp }
+      { \c_splns_frequency_in_THz_small_step_fp }
+      { \c_splns_frequency_in_THz_max_rounded_fp}
+      {
+         \draw [small~tick]
+            (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
+               -\dim_use:N \c_splns_spectrum_height_dim)
+            -- ++(0,-1.5);
+      }
+   \fp_step_inline:nnnn
+      { \c_splns_frequency_in_THz_min_rounded_fp }
+      { -\c_splns_frequency_in_THz_small_step_fp }
+      { \c_splns_frequency_in_THz_min_fp}
+      {
+         \draw [small~tick]
+            (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
+               -\dim_use:N \c_splns_spectrum_height_dim)
+            -- ++(0,-1.5);
+      }
+   \fp_step_inline:nnnn
+      { \c_splns_frequency_in_THz_max_rounded_fp }
+      { \c_splns_frequency_in_THz_small_step_fp }
+      { \c_splns_frequency_in_THz_max_fp}
+      {
+         \draw [small~tick]
+            (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
+               -\dim_use:N \c_splns_spectrum_height_dim)
+            -- ++(0,-1.5);
+      }
+   %% Größe und Einheit
+   \node at
+      (\fp_use:N \c_splns_wavelength_in_nm_min_fp,
+         -\dim_use:N \c_splns_spectrum_height_dim)
+      [large~tick, below = 6.75mm, anchor = base~east] {
+      \strut \bfseries \textit{f}~in~THz
+   };
+}
+
+% Befehl zur Ausgabe eines Spektrums
+% - #1: CSV-Datei von https://physics.nist.gov/PhysRefData/ASD/lines_form.html
+%       als „Tab-delimted“ formatiert und mit eingeschränktem Wellenlängenbereich
+%       wie oben bei Min/Max definiert.
+% - #2: Elementsymbol
+% - #3: Elementname
+\NewDocumentCommand { \drawlinespactra } { m m m } {
+   \begin{tikzpicture}[
+      x = -\fp_use:N \c_splns_wavelength_xunit_in_mm_fp mm,
+      y = 1mm,
+   ]
+      % Spektrum ausgeben
+      \csvreader [
+         separator = tab,
+         respect~underscore,
+         respect~circumflex,
+         filter~expr = {
+            test { \ifcsvnotstrcmp { \intensity } { "" } }
+            and
+            test { \ifcsvnotstrcmp { \wavelength } { "" } }
+         },
+      ] {
+         #1
+      } {
+         obs_wl_air(nm) = \wavelength,
+         intens = \intensity
+      } {
+         \tl_set:No \l_splns_wavelength_in_nm_input_tl { \wavelength }
+         \tl_remove_all:Nn \l_splns_wavelength_in_nm_input_tl { " }
+         \definecolor { current-wl } { wave } { \l_splns_wavelength_in_nm_input_tl }
+         \draw [line~width = 0.6mm, current-wl]
+            (\l_splns_wavelength_in_nm_input_tl,0)
+            -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
+      }
+      % Rahmen, Skala, Titel ausgeben
+      \splns_draw_nam_frame_and_scale:n { \textbf { #2 } \quad #3 }
+   \end{tikzpicture}
+}
+
+\ExplSyntaxOff
+
+\begin{document}
+\color{white}
+% Titel
+{
+   \fontsize{60}{70}\selectfont
+   \textlt{Es werde Licht}\par
+   \textbf{Spektrallinien}\par
+}
+\vspace{30mm}
+
+\setlength{\parskip}{15mm}
+\drawlinespactra{spectrum/ar.csv}{Ar}{Argon}
+
+\drawlinespactra{spectrum/ba.csv}{Ba}{Barium}
+
+\drawlinespactra{spectrum/ca.csv}{Ca}{Calcium}
+
+\drawlinespactra{spectrum/fe.csv}{Fe}{Eisen}
+
+\drawlinespactra{spectrum/h.csv}{H}{Wasserstoff}
+
+\drawlinespactra{spectrum/he.csv}{He}{Helium}
+
+\drawlinespactra{spectrum/hg.csv}{Hg}{Quecksilber}
+
+\drawlinespactra{spectrum/k.csv}{K}{Kalium}
+
+\drawlinespactra{spectrum/kr.csv}{Kr}{Krypton}
+
+\drawlinespactra{spectrum/li.csv}{Li}{Lithium}
+
+\drawlinespactra{spectrum/n.csv}{N}{Stickstoff}
+
+\drawlinespactra{spectrum/n+.csv}{N+}{Stickstoff}
+
+\drawlinespactra{spectrum/na.csv}{Na}{Natrium}
+
+\drawlinespactra{spectrum/na+.csv}{Na+}{Natrium}
+
+\drawlinespactra{spectrum/ne.csv}{Ne}{Neon}
+
+\drawlinespactra{spectrum/rn.csv}{Rn}{Radon}
+
+\drawlinespactra{spectrum/sr.csv}{Sr}{Strontium}
+
+\drawlinespactra{spectrum/xe.csv}{Xe}{Xenon}
+\end{document}
+
