@@ -1,4 +1,4 @@
-% !TeX program = xelatex
+% !TeX program = lualatex
 \documentclass{article}
 
 \usepackage{geometry}
@@ -18,7 +18,7 @@
    \setmainfont[
       FontFace = {lt}{n}{* Light},
       FontFace = {lt}{it}{* Light Italic},
-   ]{FiraGO}
+   ]{Fira Sans}
    \DeclareRobustCommand{\ltseries}{\fontseries{lt}\selectfont}
    \DeclareTextFontCommand{\textlt}{\ltseries}
 
@@ -136,6 +136,13 @@
    /
    (\c_splns_frequency_in_THz_max_fp - \c_splns_frequency_in_THz_min_fp)
 }
+%% Variablen für die Intensität
+\fp_new:N \l_splns_intensity_min_fp
+\fp_new:N \l_splns_intensity_max_fp
+\tl_new:N \l_splns_intensity_input_fp
+\fp_new:N \l_splns_intensity_opacity_fp
+\fp_new:N \l_splns_intensity_opacity_factor_fp
+\fp_new:N \l_splns_intensity_opacity_shift_fp
 
 % Befehl zum Umrechnen f -> λ mit direkter Ausgabe
 % - #1: Frequenz f in THz
@@ -273,6 +280,10 @@
    };
 }
 
+% Befehlsvarianten
+\cs_generate_variant:Nn \regex_extract_all:nnN { nVN }
+\cs_generate_variant:Nn \fp_set:Nn { NV }
+
 % Befehl zur Ausgabe eines Spektrums
 % - #1: CSV-Datei von https://physics.nist.gov/PhysRefData/ASD/lines_form.html
 %       als „Tab-delimted“ formatiert und mit eingeschränktem Wellenlängenbereich
@@ -280,6 +291,50 @@
 % - #2: Elementsymbol
 % - #3: Elementname
 \NewDocumentCommand { \drawlinespactra } { m m m } {
+   % minimale und maximale Intensität feststellen
+   \fp_set:Nn \l_splns_intensity_min_fp { inf }
+   \fp_set:Nn \l_splns_intensity_max_fp { 0 }
+   \csvreader [
+      separator = tab,
+      respect~underscore,
+      respect~circumflex,
+      filter~expr = {
+         test { \ifcsvnotstrcmp { \intensity } { "" } }
+         and
+         test { \ifcsvnotstrcmp { \wavelength } { "" } }
+      },
+   ] {
+      #1
+   } {
+      obs_wl_air(nm) = \wavelength,
+      intens = \intensity
+   } {
+      % Intensität parsen
+      \regex_extract_all:nVN { \d+ } \intensity \l_tmpa_seq
+      \seq_pop_left:NN \l_tmpa_seq \l_tpma_tl
+      \quark_if_no_value:NF \l_tpma_tl {
+         \fp_set:NV \l_splns_intensity_input_fp \l_tpma_tl
+         % Minimum und Maximum testen
+         \fp_compare:nT { \l_splns_intensity_input_fp < \l_splns_intensity_min_fp } {
+            \fp_set_eq:NN \l_splns_intensity_min_fp \l_splns_intensity_input_fp
+         }
+         \fp_compare:nT { \l_splns_intensity_input_fp > \l_splns_intensity_max_fp } {
+            \fp_set_eq:NN \l_splns_intensity_max_fp \l_splns_intensity_input_fp
+         }
+      }
+   }
+   % Faktor für Sichtbarkeit festlegen
+   \fp_set:Nn \l_splns_intensity_opacity_factor_fp {
+      1
+      /
+      ( \l_splns_intensity_max_fp - \l_splns_intensity_min_fp )
+   }
+   \fp_set:Nn \l_splns_intensity_opacity_shift_fp {
+      \l_splns_intensity_opacity_factor_fp
+      *
+      \l_splns_intensity_min_fp
+   }
+   % Ausgabe
    \begin{tikzpicture}[
       x = -\fp_use:N \c_splns_wavelength_xunit_in_mm_fp mm,
       y = 1mm,
@@ -300,12 +355,42 @@
          obs_wl_air(nm) = \wavelength,
          intens = \intensity
       } {
+         % Wellenlänge parsen
          \tl_set:No \l_splns_wavelength_in_nm_input_tl { \wavelength }
          \tl_remove_all:Nn \l_splns_wavelength_in_nm_input_tl { " }
          \definecolor { current-wl } { wave } { \l_splns_wavelength_in_nm_input_tl }
-         \draw [line~width = 0.6mm, current-wl]
+         % Intensität parsen
+         \regex_extract_all:nVN { \d+ } \intensity \l_tmpa_seq
+         \seq_pop_left:NN \l_tmpa_seq \l_tpma_tl
+         \quark_if_no_value:NF \l_tpma_tl {
+            \fp_set:NV \l_splns_intensity_input_fp \l_tpma_tl
+            \fp_set:Nn \l_splns_intensity_opacity_fp {
+               round(\l_splns_intensity_opacity_factor_fp
+               *
+               \l_splns_intensity_input_fp
+               -
+               \l_splns_intensity_opacity_shift_fp,3)
+            }
+            % Linie ausgeben
+            \draw [
+               line~width = 0.6mm,
+               current-wl,
+               opacity = \fp_use:N \l_splns_intensity_opacity_fp,
+            ]
+               (\l_splns_wavelength_in_nm_input_tl,0)
+               -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
+         }
+         % Marker für λ unabhängig von Intensität
+         \fill [
+            current-wl,
+         ]
             (\l_splns_wavelength_in_nm_input_tl,0)
-            -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
+            circle [ radius = 0.4mm ];
+         \fill [
+            current-wl,
+         ]
+            (\l_splns_wavelength_in_nm_input_tl,-\dim_use:N \c_splns_spectrum_height_dim)
+            circle [ radius = 0.4mm ];
       }
       % Rahmen, Skala, Titel ausgeben
       \splns_draw_nam_frame_and_scale:n { \textbf { #2 } \quad #3 }
