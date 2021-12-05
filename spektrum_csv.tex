@@ -478,21 +478,27 @@
       \splns_draw_full_spectrum:
       % Fraunhofer Linien hinzufügen
       % Quelle: https://de.wikipedia.org/wiki/Fraunhoferlinie (2021-12-05)
-      \clist_set:Nn \l_tmpa_clist { 358.121, 382.044, 393.368, 396.847, 430.774, 430.790, 486.134, 527.039, 587.562, 589.594, 656.281, 686.719, 759.370 }
-      \clist_map_inline:Nn \l_tmpa_clist {
-         \draw [
-            frauenhofer~major~line,
-         ]
-            (##1,0)
-            -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
-      }
-      \clist_set:Nn \l_tmpa_clist { 410.175, 434.047, 438.355, 466.814, 495.761, 516.733, 516.751, 516.891, 517.270, 518.362, 546.073, 588.997, 627.661 }
-      \clist_map_inline:Nn \l_tmpa_clist {
-         \draw [
-            frauenhofer~minor~line,
-         ]
-            (##1,0)
-            -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
+      \bool_if:NT \l_splns_show_spectra_bool {
+         \clist_set:Nn \l_tmpa_clist { 358.121, 382.044, 393.368, 396.847,
+            430.774, 430.790, 486.134, 527.039, 587.562, 589.594, 656.281,
+            686.719, 759.370 }
+         \clist_map_inline:Nn \l_tmpa_clist {
+            \draw [
+               frauenhofer~major~line,
+            ]
+               (##1,0)
+               -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
+         }
+         \clist_set:Nn \l_tmpa_clist { 410.175, 434.047, 438.355, 466.814,
+            495.761, 516.733, 516.751, 516.891, 517.270, 518.362, 546.073,
+            588.997, 627.661 }
+         \clist_map_inline:Nn \l_tmpa_clist {
+            \draw [
+               frauenhofer~minor~line,
+            ]
+               (##1,0)
+               -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
+         }
       }
       % Skala, Titel ausgeben
       \splns_draw_name_and_scale:n { }
