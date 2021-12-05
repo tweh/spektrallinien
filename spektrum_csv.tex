@@ -3,10 +3,11 @@
 
 \usepackage{geometry}
 \geometry{
-   paperwidth=847mm,
-   paperheight=1195mm,
-   margin=33mm,
-   bottom=8mm,
+   paperwidth = 847mm,
+   paperheight = 1195mm,
+   margin = 33mm,
+   bottom = 18mm,
+   right = 37mm,
 }
 \setlength{\parindent}{0pt}
 
@@ -14,6 +15,7 @@
 \usepackage{xcolor}
    \pagecolor{black}
 \usepackage{tikz}
+   \usetikzlibrary{arrows.meta}
 \usepackage{csvsimple-l3}
 \usepackage{fontspec}
    \setmainfont[
@@ -22,9 +24,14 @@
    ]{Fira Sans}
    \DeclareRobustCommand{\ltseries}{\fontseries{lt}\selectfont}
    \DeclareTextFontCommand{\textlt}{\ltseries}
+\usepackage{ccicons}
+\usepackage[hidelinks]{hyperref}
+   \urlstyle{same}
 
 % Tikz-Stile
 \tikzset{
+   % Pfeilspitze festlegen
+   > = {Triangle[length=2mm,width=1.2mm]},
    % allg. Einstellungen für alle Nodes
    every node/.style = {
       inner sep = 0pt,
@@ -37,7 +44,9 @@
       anchor = base west,
    },
    % Linienbreite
-   line width = 1mm,
+   every picture/.style = {
+      line width = 0.7pt,
+   },
    % Stile für Skalenteile (in drei Abstufungen)
    large tick/.style = {
       white,
@@ -77,7 +86,7 @@
 %% Hilfsvariable für aktuelle Wellenlänge
 \tl_new:N \l_splns_wavelength_in_nm_input_tl
 %% Gesamthöhe des Spektrums
-\dim_const:Nn \c_splns_spectrum_height_dim { 29mm }
+\dim_const:Nn \c_splns_spectrum_height_dim { 28mm }
 %% Höhe des intensitätsabhänigen Spektrums
 \dim_const:Nn \c_splns_intensity_spectrum_height_dim { 0.65 \c_splns_spectrum_height_dim }
 % Abstand zwischen Spektren
@@ -362,6 +371,7 @@
    \begin{tikzpicture}[
       x = -\fp_use:N \c_splns_wavelength_xunit_in_mm_fp mm,
       y = 1mm,
+      remember~picture,
    ]
       % Spektrum ausgeben
       \bool_if:NT \l_splns_show_spectra_bool {
@@ -437,6 +447,15 @@
             -\dim_use:N \c_splns_intensity_spectrum_height_dim
             -\dim_use:N \c_splns_intensity_spectrum_sep_dim
             -\dim_use:N \c_splns_nonintensity_spectrum_height_dim);
+      % Koordinaten für spätere Referenzierung
+      \coordinate (#2-intensity-spectrum) at
+         (\fp_use:N \c_splns_wavelength_in_nm_min_fp,
+            -0.5 * \dim_use:N \c_splns_intensity_spectrum_height_dim);
+      \coordinate (#2-nonintensity-spectrum) at
+         (\fp_use:N \c_splns_wavelength_in_nm_min_fp,
+            -\dim_use:N \c_splns_intensity_spectrum_height_dim
+            -\dim_use:N \c_splns_intensity_spectrum_sep_dim
+            -0.5*\dim_use:N \c_splns_nonintensity_spectrum_height_dim);
    \end{tikzpicture}
 }
 
@@ -524,7 +543,7 @@
 % Befehl für Überschriften
 % - #1: Überschrift
 \NewDocumentCommand { \minisec } { m } {
-   \par\vspace{10mm}
+   \par\vspace{8mm}
    {  
       \bfseries\fontsize{28}{32}
       \selectfont
@@ -543,7 +562,7 @@
    \textlt{Es werde Licht}\par
    \textbf{Spektrallinien}\par
 }
-\vspace{14mm}
+\vspace{12mm}
 
 \setlength{\parskip}{8mm}
 
@@ -560,6 +579,24 @@
 \minisec{Edelgase}
 
 \drawlinespactra{spectrum/he.csv}{He}{Helium}
+
+\begin{tikzpicture}[
+   remember picture,
+   overlay,
+   white,
+   <-,
+   shorten < = 0.5mm,
+   shorten > = 1mm,
+   line width = 1pt,
+]
+   \draw (He-intensity-spectrum) -| ++(12mm,7mm)
+      node [rotate = 90, anchor=west]
+         {hier repräsentiert die Höhe einer Linie die relative Intensität};
+   \draw (He-nonintensity-spectrum) -| ++(12mm,-7mm)
+      node [rotate = 90, anchor=east]
+      {hier sind alle beobachtbaren Spektrallinien unabhängig von ihrer
+         Intensität aufgetragen};
+\end{tikzpicture}
 
 \drawlinespactra{spectrum/ne.csv}{Ne}{Neon}
 
@@ -592,5 +629,15 @@
 \drawlinespactra{spectrum/ba.csv}{Ba}{Barium}
 
 \drawlinespactra{spectrum/hg.csv}{Hg}{Quecksilber}
+
+\vfill
+Daten zu Fraunhoferlinien: \url{https://de.wikipedia.org/wiki/Fraunhoferlinie},
+   abgerufen am 5. Dezember 2021.
+\hfill
+Gestaltung: Herr W\_, herrw.de\\
+Daten zu Spektrallinien: \url{https://physics.nist.gov/PhysRefData/ASD/lines_form.html},
+   abgerufen am 4. Dezember 2021.
+\hfill
+\href{https://github.com/tweh/spektrallinien}{Spektrallinien} (v1.0) © 2021, \href{https://herrw.de}{Tobi Weh}, lizenziert als \href{http://creativecommons.org/licenses/by-nc-sa/4.0/}{CC BY-NC-SA 4.0} \ccbyncsa
 \end{document}
 
