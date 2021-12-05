@@ -421,12 +421,13 @@
       }
       % Skala, Titel ausgeben
       \splns_draw_name_and_scale:n { \textbf { #2 } \quad #3 }
-      % Rahmen
+      % Rahmen für intensitätsabhängiges Spektrum
       \draw [white]
          (\fp_use:N \c_splns_wavelength_in_nm_min_fp,0)
          rectangle
          (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
             -\dim_use:N \c_splns_intensity_spectrum_height_dim);
+      % Rahmen für intensitätsunabhängiges Spektrum
       \draw [white]
          (\fp_use:N \c_splns_wavelength_in_nm_min_fp,
             -\dim_use:N \c_splns_intensity_spectrum_height_dim
