@@ -1,11 +1,11 @@
 ## Es werde Licht
-# Spektrallinien
+# Spektraltafel
 
 Mit TeX erstellte Spaktraltafel im Format DIN A0 (+ 3mm Anschnitt umlaufend).
 
-→ [Spektraltafel, v1.0 (PDF)](https://github.com/tweh/spektrallinien/raw/master/versions/spektrum_v1.0.pdf)
+→ [Spektraltafel, v1.0 (PDF)](https://github.com/tweh/spektrallinien/raw/master/versionen/spektraltafel_v1.0.pdf)
 
-![Spektraltafel](versions/spektrum_v1.0.png)
+![Spektraltafel](versionen/spektraltafel_v1.0.png)
 
 ## Quellen
 
