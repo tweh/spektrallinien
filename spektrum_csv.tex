@@ -432,6 +432,7 @@
    \end{tikzpicture}
 }
 
+% interner Befehl, um kontinuierliches Spektrum zu zeichnen
 \cs_new:Nn \splns_draw_full_spectrum: {
    \fp_step_inline:nnnn
       { \c_splns_wavelength_in_nm_min_fp }
@@ -448,6 +449,7 @@
       }
 }
 
+% Befehl, um kontinuierliches Spektrum zu zeichnen
 \NewDocumentCommand { \drawfullspectrum } { } {
    \begin{tikzpicture}[
       x = -\fp_use:N \c_splns_wavelength_xunit_in_mm_fp mm,
@@ -466,6 +468,7 @@
    \end{tikzpicture}
 }
 
+% Befehl, um Sonnenspektrum zu zeichnen
 \NewDocumentCommand { \drawsolarspectrum } { } {
    \begin{tikzpicture}[
       x = -\fp_use:N \c_splns_wavelength_xunit_in_mm_fp mm,
@@ -502,6 +505,8 @@
    \end{tikzpicture}
 }
 
+% Befehl für Überschriften
+% - #1: Überschrift
 \NewDocumentCommand { \minisec } { m } {
    \par\vspace{10mm}
    {  
