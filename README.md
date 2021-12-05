@@ -3,6 +3,8 @@
 
 Mit TeX erstellte Spaktraltafel im Format DIN A0 (+ 3mm Anschnitt umlaufend).
 
+→ [Spektraltafel, v1.0 (PDF)](versions/spektrum_v1.0.pdf)
+
 ![Spektraltafel](versions/spektrum_v1.0.png)
 
 ## Quellen
