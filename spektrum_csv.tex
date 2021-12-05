@@ -71,6 +71,9 @@
 \ExplSyntaxOn
 
 % Variablen und Konstanten
+%% Spektren anzeigen oder ausblenden (zu Testzwecken)
+\bool_new:N \l_splns_show_spectra_bool
+\bool_set_false:N: \l_splns_show_spectra_bool
 %% Hilfsvariable für aktuelle Wellenlänge
 \tl_new:N \l_splns_wavelength_in_nm_input_tl
 %% Gesamthöhe des Spektrums
@@ -313,52 +316,7 @@
    % minimale und maximale Intensität feststellen
    \fp_set:Nn \l_splns_intensity_min_fp { inf }
    \fp_set:Nn \l_splns_intensity_max_fp { 0 }
-   \csvreader [
-      separator = tab,
-      respect~underscore,
-      respect~circumflex,
-      filter~expr = {
-         test { \ifcsvnotstrcmp { \intensity } { "" } }
-         and
-         test { \ifcsvnotstrcmp { \wavelength } { "" } }
-      },
-   ] {
-      #1
-   } {
-      obs_wl_air(nm) = \wavelength,
-      intens = \intensity
-   } {
-      % Intensität parsen
-      \regex_extract_all:nVN { \d+ } \intensity \l_tmpa_seq
-      \seq_pop_left:NN \l_tmpa_seq \l_tpma_tl
-      \quark_if_no_value:NF \l_tpma_tl {
-         \fp_set:NV \l_splns_intensity_input_fp \l_tpma_tl
-         % Minimum und Maximum testen
-         \fp_compare:nT { \l_splns_intensity_input_fp < \l_splns_intensity_min_fp } {
-            \fp_set_eq:NN \l_splns_intensity_min_fp \l_splns_intensity_input_fp
-         }
-         \fp_compare:nT { \l_splns_intensity_input_fp > \l_splns_intensity_max_fp } {
-            \fp_set_eq:NN \l_splns_intensity_max_fp \l_splns_intensity_input_fp
-         }
-      }
-   }
-   % Faktor für Sichtbarkeit festlegen
-   \fp_set:Nn \l_splns_intensity_opacity_factor_fp {
-      1
-      /
-      ( \l_splns_intensity_max_fp - \l_splns_intensity_min_fp )
-   }
-   \fp_set:Nn \l_splns_intensity_opacity_shift_fp {
-      \l_splns_intensity_opacity_factor_fp
-      *
-      \l_splns_intensity_min_fp
-   }
-   % Ausgabe
-   \begin{tikzpicture}[
-      x = -\fp_use:N \c_splns_wavelength_xunit_in_mm_fp mm,
-      y = 1mm,
-   ]
-      % Spektrum ausgeben
+   \bool_if:NT \l_splns_show_spectra_bool {
       \csvreader [
          separator = tab,
          respect~underscore,
@@ -374,43 +332,92 @@
          obs_wl_air(nm) = \wavelength,
          intens = \intensity
       } {
-         % Wellenlänge parsen
-         \tl_set:No \l_splns_wavelength_in_nm_input_tl { \wavelength }
-         \tl_remove_all:Nn \l_splns_wavelength_in_nm_input_tl { " }
-         \definecolor { current-wl } { wave } { \l_splns_wavelength_in_nm_input_tl }
          % Intensität parsen
          \regex_extract_all:nVN { \d+ } \intensity \l_tmpa_seq
          \seq_pop_left:NN \l_tmpa_seq \l_tpma_tl
          \quark_if_no_value:NF \l_tpma_tl {
             \fp_set:NV \l_splns_intensity_input_fp \l_tpma_tl
-            \fp_set:Nn \l_splns_intensity_opacity_fp {
-               round(\l_splns_intensity_opacity_factor_fp
-               *
-               \l_splns_intensity_input_fp
-               -
-               \l_splns_intensity_opacity_shift_fp,3)
+            % Minimum und Maximum testen
+            \fp_compare:nT { \l_splns_intensity_input_fp < \l_splns_intensity_min_fp } {
+               \fp_set_eq:NN \l_splns_intensity_min_fp \l_splns_intensity_input_fp
             }
-            % Info in Log
-            \iow_term:x { Drawing~wave~length~\l_splns_wavelength_in_nm_input_tl nm~of~#2~... }
-            % Linie ausgeben
+            \fp_compare:nT { \l_splns_intensity_input_fp > \l_splns_intensity_max_fp } {
+               \fp_set_eq:NN \l_splns_intensity_max_fp \l_splns_intensity_input_fp
+            }
+         }
+      }
+      % Faktor für Sichtbarkeit festlegen
+      \fp_set:Nn \l_splns_intensity_opacity_factor_fp {
+         1
+         /
+         ( \l_splns_intensity_max_fp - \l_splns_intensity_min_fp )
+      }
+      \fp_set:Nn \l_splns_intensity_opacity_shift_fp {
+         \l_splns_intensity_opacity_factor_fp
+         *
+         \l_splns_intensity_min_fp
+      }
+   }
+   % Ausgabe
+   \begin{tikzpicture}[
+      x = -\fp_use:N \c_splns_wavelength_xunit_in_mm_fp mm,
+      y = 1mm,
+   ]
+      % Spektrum ausgeben
+      \bool_if:NT \l_splns_show_spectra_bool {
+         \csvreader [
+            separator = tab,
+            respect~underscore,
+            respect~circumflex,
+            filter~expr = {
+               test { \ifcsvnotstrcmp { \intensity } { "" } }
+               and
+               test { \ifcsvnotstrcmp { \wavelength } { "" } }
+            },
+         ] {
+            #1
+         } {
+            obs_wl_air(nm) = \wavelength,
+            intens = \intensity
+         } {
+            % Wellenlänge parsen
+            \tl_set:No \l_splns_wavelength_in_nm_input_tl { \wavelength }
+            \tl_remove_all:Nn \l_splns_wavelength_in_nm_input_tl { " }
+            \definecolor { current-wl } { wave } { \l_splns_wavelength_in_nm_input_tl }
+            % Intensität parsen
+            \regex_extract_all:nVN { \d+ } \intensity \l_tmpa_seq
+            \seq_pop_left:NN \l_tmpa_seq \l_tpma_tl
+            \quark_if_no_value:NF \l_tpma_tl {
+               \fp_set:NV \l_splns_intensity_input_fp \l_tpma_tl
+               \fp_set:Nn \l_splns_intensity_opacity_fp {
+                  round(\l_splns_intensity_opacity_factor_fp
+                  *
+                  \l_splns_intensity_input_fp
+                  -
+                  \l_splns_intensity_opacity_shift_fp,3)
+               }
+               % Info in Log
+               \iow_term:x { Drawing~wave~length~\l_splns_wavelength_in_nm_input_tl nm~of~#2~... }
+               % Linie ausgeben
+               \draw [
+                  spectral~line,
+                  current-wl,
+               ]
+                  (\l_splns_wavelength_in_nm_input_tl,
+                     -\c_splns_intensity_spectrum_height_dim)
+                  -- ++(0,
+                     \fp_use:N \l_splns_intensity_opacity_fp
+                     * \dim_use:N \c_splns_intensity_spectrum_height_dim);
+            }
+            % Linie für λ unabhängig von Intensität
             \draw [
                spectral~line,
                current-wl,
             ]
                (\l_splns_wavelength_in_nm_input_tl,
-                  -\c_splns_intensity_spectrum_height_dim)
-               -- ++(0,
-                  \fp_use:N \l_splns_intensity_opacity_fp
-                  * \dim_use:N \c_splns_intensity_spectrum_height_dim);
+                  -\dim_use:N \c_splns_spectrum_height_dim)
+               -- ++(0,\dim_use:N \c_splns_nonintensity_spectrum_height_dim);
          }
-         % Linie für λ unabhängig von Intensität
-         \draw [
-            spectral~line,
-            current-wl,
-         ]
-            (\l_splns_wavelength_in_nm_input_tl,
-               -\dim_use:N \c_splns_spectrum_height_dim)
-            -- ++(0,\dim_use:N \c_splns_nonintensity_spectrum_height_dim);
       }
       % Skala, Titel ausgeben
       \splns_draw_name_and_scale:n { \textbf { #2 } \quad #3 }
@@ -434,19 +441,21 @@
 
 % interner Befehl, um kontinuierliches Spektrum zu zeichnen
 \cs_new:Nn \splns_draw_full_spectrum: {
-   \fp_step_inline:nnnn
-      { \c_splns_wavelength_in_nm_min_fp }
-      { 0.1 * \c_splns_wavelength_in_nm_small_step_fp }
-      { \c_splns_wavelength_in_nm_max_fp}
-      {
-         \definecolor { current-wl } { wave } { ##1 }
-         \draw [
-            spectral~line,
-            current-wl,
-         ]
-            (##1,0)
-            -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
-      }
+   \bool_if:NT \l_splns_show_spectra_bool {
+      \fp_step_inline:nnnn
+         { \c_splns_wavelength_in_nm_min_fp }
+         { 0.1 * \c_splns_wavelength_in_nm_small_step_fp }
+         { \c_splns_wavelength_in_nm_max_fp}
+         {
+            \definecolor { current-wl } { wave } { ##1 }
+            \draw [
+               spectral~line,
+               current-wl,
+            ]
+               (##1,0)
+               -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
+         }
+   }
 }
 
 % Befehl, um kontinuierliches Spektrum zu zeichnen
