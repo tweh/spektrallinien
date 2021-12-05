@@ -6,6 +6,7 @@
    paperwidth=847mm,
    paperheight=1195mm,
    margin=33mm,
+   bottom=8mm,
 }
 \setlength{\parindent}{0pt}
 
@@ -52,6 +53,19 @@
       white,
       font = \fontsize{14bp}{14bp}\selectfont,
    },
+   % Spektrallinie
+   spectral line/.style = {
+      line width = 0.5mm,
+   },
+   % Fraunehofer Linie
+   frauenhofer major line/.style = {
+      line width = 0.75mm,
+      black,
+   },
+   frauenhofer minor line/.style = {
+      line width = 0.4mm,
+      black,
+   },
 }
 
 \ExplSyntaxOn
@@ -59,8 +73,18 @@
 % Variablen und Konstanten
 %% Hilfsvariable für aktuelle Wellenlänge
 \tl_new:N \l_splns_wavelength_in_nm_input_tl
-%% Höhe des Spektrums
-\dim_const:Nn \c_splns_spectrum_height_dim { 20mm }
+%% Gesamthöhe des Spektrums
+\dim_const:Nn \c_splns_spectrum_height_dim { 29mm }
+%% Höhe des intensitätsabhänigen Spektrums
+\dim_const:Nn \c_splns_intensity_spectrum_height_dim { 0.65 \c_splns_spectrum_height_dim }
+% Abstand zwischen Spektren
+\dim_const:Nn \c_splns_intensity_spectrum_sep_dim { 1.5mm }
+%% Höhe des intensitätsUNabhänigen Spektrums
+\dim_const:Nn \c_splns_nonintensity_spectrum_height_dim {
+   \c_splns_spectrum_height_dim
+   - \c_splns_intensity_spectrum_sep_dim
+   - \c_splns_intensity_spectrum_height_dim
+}
 %% Breite des Spektrums
 \fp_const:Nn \c_splns_spectrum_width_in_mm_fp
    { \dim_to_decimal_in_unit:nn { \textwidth - 1mm } { 1mm } }% in mm
@@ -153,7 +177,7 @@
 
 % Befehl zum Ausgeben des Labels, des Rahmens und der Skala
 % - #1: Label
-\cs_new:Nn \splns_draw_nam_frame_and_scale:n {
+\cs_new:Nn \splns_draw_name_and_scale:n {
    % Symbol und Name
    \node [ symbol~and~name ]
       at (\fp_use:N \c_splns_wavelength_in_nm_max_fp,4.5mm)
@@ -161,11 +185,6 @@
          \strut
          #1
       };
-   % Rahmen
-   \draw [white]
-      (\fp_use:N \c_splns_wavelength_in_nm_min_fp,0)
-      rectangle
-      (\fp_use:N \c_splns_wavelength_in_nm_max_fp,-\dim_use:N \c_splns_spectrum_height_dim);
    % Skala Wellenlänge
    %% große Teilung
    \fp_step_inline:nnnn
@@ -371,30 +390,126 @@
                -
                \l_splns_intensity_opacity_shift_fp,3)
             }
+            % Info in Log
+            \iow_term:x { Drawing~wave~length~\l_splns_wavelength_in_nm_input_tl nm~of~#2~... }
             % Linie ausgeben
             \draw [
-               line~width = 0.6mm,
+               spectral~line,
                current-wl,
-               opacity = \fp_use:N \l_splns_intensity_opacity_fp,
             ]
-               (\l_splns_wavelength_in_nm_input_tl,0)
-               -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
+               (\l_splns_wavelength_in_nm_input_tl,
+                  -\c_splns_intensity_spectrum_height_dim)
+               -- ++(0,
+                  \fp_use:N \l_splns_intensity_opacity_fp
+                  * \dim_use:N \c_splns_intensity_spectrum_height_dim);
          }
-         % Marker für λ unabhängig von Intensität
-         \fill [
+         % Linie für λ unabhängig von Intensität
+         \draw [
+            spectral~line,
             current-wl,
          ]
-            (\l_splns_wavelength_in_nm_input_tl,0)
-            circle [ radius = 0.4mm ];
-         \fill [
-            current-wl,
-         ]
-            (\l_splns_wavelength_in_nm_input_tl,-\dim_use:N \c_splns_spectrum_height_dim)
-            circle [ radius = 0.4mm ];
+            (\l_splns_wavelength_in_nm_input_tl,
+               -\dim_use:N \c_splns_spectrum_height_dim)
+            -- ++(0,\dim_use:N \c_splns_nonintensity_spectrum_height_dim);
       }
-      % Rahmen, Skala, Titel ausgeben
-      \splns_draw_nam_frame_and_scale:n { \textbf { #2 } \quad #3 }
+      % Skala, Titel ausgeben
+      \splns_draw_name_and_scale:n { \textbf { #2 } \quad #3 }
+      % Rahmen
+      \draw [white]
+         (\fp_use:N \c_splns_wavelength_in_nm_min_fp,0)
+         rectangle
+         (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
+            -\dim_use:N \c_splns_intensity_spectrum_height_dim);
+      \draw [white]
+         (\fp_use:N \c_splns_wavelength_in_nm_min_fp,
+            -\dim_use:N \c_splns_intensity_spectrum_height_dim
+            -\dim_use:N \c_splns_intensity_spectrum_sep_dim)
+         rectangle
+         (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
+            -\dim_use:N \c_splns_intensity_spectrum_height_dim
+            -\dim_use:N \c_splns_intensity_spectrum_sep_dim
+            -\dim_use:N \c_splns_nonintensity_spectrum_height_dim);
    \end{tikzpicture}
+}
+
+\cs_new:Nn \splns_draw_full_spectrum: {
+   \fp_step_inline:nnnn
+      { \c_splns_wavelength_in_nm_min_fp }
+      { 0.1 * \c_splns_wavelength_in_nm_small_step_fp }
+      { \c_splns_wavelength_in_nm_max_fp}
+      {
+         \definecolor { current-wl } { wave } { ##1 }
+         \draw [
+            spectral~line,
+            current-wl,
+         ]
+            (##1,0)
+            -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
+      }
+}
+
+\NewDocumentCommand { \drawfullspectrum } { } {
+   \begin{tikzpicture}[
+      x = -\fp_use:N \c_splns_wavelength_xunit_in_mm_fp mm,
+      y = 1mm,
+   ]
+      % Spektrum ausgeben
+      \splns_draw_full_spectrum:
+      % Skala, Titel ausgeben
+      \splns_draw_name_and_scale:n { }
+      % Rahmen
+      \draw [white]
+         (\fp_use:N \c_splns_wavelength_in_nm_min_fp,0)
+         rectangle
+         (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
+            -\dim_use:N \c_splns_spectrum_height_dim);
+   \end{tikzpicture}
+}
+
+\NewDocumentCommand { \drawsolarspectrum } { } {
+   \begin{tikzpicture}[
+      x = -\fp_use:N \c_splns_wavelength_xunit_in_mm_fp mm,
+      y = 1mm,
+   ]
+      % Spektrum ausgeben
+      \splns_draw_full_spectrum:
+      % Fraunhofer Linien hinzufügen
+      % Quelle: https://de.wikipedia.org/wiki/Fraunhoferlinie (2021-12-05)
+      \clist_set:Nn \l_tmpa_clist { 358.121, 382.044, 393.368, 396.847, 430.774, 430.790, 486.134, 527.039, 587.562, 589.594, 656.281, 686.719, 759.370 }
+      \clist_map_inline:Nn \l_tmpa_clist {
+         \draw [
+            frauenhofer~major~line,
+         ]
+            (##1,0)
+            -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
+      }
+      \clist_set:Nn \l_tmpa_clist { 410.175, 434.047, 438.355, 466.814, 495.761, 516.733, 516.751, 516.891, 517.270, 518.362, 546.073, 588.997, 627.661 }
+      \clist_map_inline:Nn \l_tmpa_clist {
+         \draw [
+            frauenhofer~minor~line,
+         ]
+            (##1,0)
+            -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
+      }
+      % Skala, Titel ausgeben
+      \splns_draw_name_and_scale:n { }
+      % Rahmen
+      \draw [white]
+         (\fp_use:N \c_splns_wavelength_in_nm_min_fp,0)
+         rectangle
+         (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
+            -\dim_use:N \c_splns_spectrum_height_dim);
+   \end{tikzpicture}
+}
+
+\NewDocumentCommand { \minisec } { m } {
+   \par\vspace{10mm}
+   {  
+      \bfseries\fontsize{28}{32}
+      \selectfont
+      #1
+   }\par
+   \vspace{-0.5\parskip}
 }
 
 \ExplSyntaxOff
@@ -403,14 +518,39 @@
 \color{white}
 % Titel
 {
-   \fontsize{60}{70}\selectfont
+   \fontsize{60}{66}\selectfont
    \textlt{Es werde Licht}\par
    \textbf{Spektrallinien}\par
 }
-\vspace{30mm}
+\vspace{14mm}
 
-\setlength{\parskip}{15mm}
+\setlength{\parskip}{8mm}
+
+\minisec{Kontinuierliches Spektrum}
+
+\vspace{-5mm}
+\drawfullspectrum
+
+\minisec{Sonnenspektrum mit Fraunhofer Linien}
+
+\vspace{-5mm}
+\drawsolarspectrum
+
+\minisec{Edelgase}
+
+\drawlinespactra{spectrum/he.csv}{He}{Helium}
+
+\drawlinespactra{spectrum/ne.csv}{Ne}{Neon}
+
 \drawlinespactra{spectrum/ar.csv}{Ar}{Argon}
+
+\drawlinespactra{spectrum/kr.csv}{Kr}{Krypton}
+
+\drawlinespactra{spectrum/xe.csv}{Xe}{Xenon}
+
+\drawlinespactra{spectrum/rn.csv}{Rn}{Radon}
+
+\minisec{andere Elemente}
 
 \drawlinespactra{spectrum/ba.csv}{Ba}{Barium}
 
@@ -420,30 +560,16 @@
 
 \drawlinespactra{spectrum/h.csv}{H}{Wasserstoff}
 
-\drawlinespactra{spectrum/he.csv}{He}{Helium}
-
 \drawlinespactra{spectrum/hg.csv}{Hg}{Quecksilber}
 
 \drawlinespactra{spectrum/k.csv}{K}{Kalium}
-
-\drawlinespactra{spectrum/kr.csv}{Kr}{Krypton}
 
 \drawlinespactra{spectrum/li.csv}{Li}{Lithium}
 
 \drawlinespactra{spectrum/n.csv}{N}{Stickstoff}
 
-\drawlinespactra{spectrum/n+.csv}{N+}{Stickstoff}
-
 \drawlinespactra{spectrum/na.csv}{Na}{Natrium}
 
-\drawlinespactra{spectrum/na+.csv}{Na+}{Natrium}
-
-\drawlinespactra{spectrum/ne.csv}{Ne}{Neon}
-
-\drawlinespactra{spectrum/rn.csv}{Rn}{Radon}
-
 \drawlinespactra{spectrum/sr.csv}{Sr}{Strontium}
-
-\drawlinespactra{spectrum/xe.csv}{Xe}{Xenon}
 \end{document}
 
