@@ -3,9 +3,9 @@
 
 Mit TeX erstellte Spaktraltafel im Format DIN A0 (+ 3mm Anschnitt umlaufend).
 
-→ [Spektraltafel, v1.1 (PDF)](https://github.com/tweh/spektrallinien/raw/master/versionen/spektraltafel_v1.1.pdf)
+→ [Spektraltafel, v1.2 (PDF)](https://github.com/tweh/spektrallinien/raw/master/versionen/spektraltafel_v1.2.pdf)
 
-![Spektraltafel](versionen/spektraltafel_v1.1.png)
+![Spektraltafel](versionen/spektraltafel_v1.2.png)
 
 ## Quellen
 
@@ -15,6 +15,14 @@ Mit TeX erstellte Spaktraltafel im Format DIN A0 (+ 3mm Anschnitt umlaufend).
 ## Versionen
 
 - `v1.0`: initiale Version
+
+- `v1.1`:
+  - Dateien umbenannt
+  - Überschrift geändert
+
+- `v1.2`:
+  - auf CMYK umgestellt (für Druck)
+  - CC-Icons ausgerichtet
 
 ## Lizenz
 
