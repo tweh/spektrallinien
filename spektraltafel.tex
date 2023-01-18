@@ -12,12 +12,23 @@
 \setlength{\parindent}{0pt}
 
 \usepackage{etoolbox}
-\usepackage[cmyk]{xcolor}
-   \definecolor{black}{cmyk}{1.0,0.4,0.5,1.0}
+
+% general color setting
+\usepackage[rgb]{xcolor}
+% color setting for professional printing in CMYK mode
+%\usepackage[cmyk]{xcolor}
+%   \definecolor{black}{cmyk}{1.0,0.4,0.5,1.0}
    \pagecolor{black}
+
+% for output in DIN A4 use
+\usepackage{pgfpages}
+\pgfpagesuselayout{resize to}[a4paper]
+
 \usepackage{tikz}
    \usetikzlibrary{arrows.meta}
+
 \usepackage{csvsimple-l3}
+
 \usepackage{fontspec}
    \setmainfont[
       FontFace = {lt}{n}{* Light},
@@ -25,7 +36,9 @@
    ]{Fira Sans}
    \DeclareRobustCommand{\ltseries}{\fontseries{lt}\selectfont}
    \DeclareTextFontCommand{\textlt}{\ltseries}
+
 \usepackage{ccicons}
+
 \usepackage[hidelinks]{hyperref}
    \urlstyle{same}
 
