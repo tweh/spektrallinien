@@ -148,3 +148,4 @@ sympy-plots-for-*.tex/
 /metrix.tex
 /CTAN-INFO.txt
 !/versionen/*.pdf
+*.synctex(busy)
