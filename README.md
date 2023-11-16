@@ -6,7 +6,7 @@ Mit TeX erstellte Spaktraltafel im Format DIN A0 (+ 3mm Anschnitt umlaufend).
 - [Spektraltafel, v1.3 (PDF, DIN A0, CMYK)](https://github.com/tweh/spektrallinien/raw/master/versionen/spektraltafel_v1.3_a0_black_cmyk.pdf)  
 - [Spektraltafel, v1.3 (PDF, DIN A4, RGB)](https://github.com/tweh/spektrallinien/raw/master/versionen/spektraltafel_v1.3_a4_black_rgb.pdf)  
 - [Spektraltafel, v1.3 (PDF, DIN A4, RGB, gerastert)](https://github.com/tweh/spektrallinien/raw/master/versionen/spektraltafel_v1.3_a4_black_rgb_rendered.pdf) in dieser Version ist die Seite als gerasterte Pixeldatei gespeichert, falls PDF-Betrachter das Anzeigen der Grafiken nicht bewältigen können.  
-- → [Spektraltafel, v1.3 (PDF, DIN A4, RGB, weißer Hintergrund)](https://github.com/tweh/spektrallinien/raw/master/versionenspektraltafel_v1.3_a4_white_rgb.pdf) in dieser Versio ist der Seitenhintergrund weiß für mehr Druckfreundlichkeit
+- [Spektraltafel, v1.3 (PDF, DIN A4, RGB, weißer Hintergrund)](https://github.com/tweh/spektrallinien/raw/master/versionenspektraltafel_v1.3_a4_white_rgb.pdf) in dieser Versio ist der Seitenhintergrund weiß für mehr Druckfreundlichkeit
 - [Spektraltafel, v1.3 (PNG, RGB)](https://github.com/tweh/spektrallinien/raw/master/versionen/spektraltafel_v1.3_a4_black_rgb_highres.pdf)
 
 ![Spektraltafel](versionen/spektraltafel_v1.3.png)
