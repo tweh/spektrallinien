@@ -1,94 +1,128 @@
 % !TeX program = lualatex
 \documentclass{article}
 
-\usepackage{geometry}
-\geometry{
-   paperwidth = 847mm,
-   paperheight = 1195mm,
-   margin = 33mm,
-   bottom = 18mm,
-   right = 37mm,
-}
-\setlength{\parindent}{0pt}
+% settings
+%% papersize: either DIN A4 or DIN A0 (incl. 3mm bleed)
+\newif\ifaIVpaper
+  \aIVpaperfalse
+%% background color: either full black or withe page
+\newif\ifwhitebackground
+  \whitebackgroundfalse
+%% color mode: either RGB or CMYK
+\newif\ifCMYK
+  \CMYKtrue
 
+% tool box
 \usepackage{etoolbox}
 
-% general color setting
-\usepackage[rgb]{xcolor}
-% color setting for professional printing in CMYK mode
-%\usepackage[cmyk]{xcolor}
-%   \definecolor{black}{cmyk}{1.0,0.4,0.5,1.0}
-   \pagecolor{black}
+% general color settings
+\ifCMYK
+  \usepackage[cmyk]{xcolor}
+    \definecolor{black}{cmyk}{1.0,0.4,0.5,1.0}
+\else
+  \usepackage[rgb]{xcolor}
+\fi
 
-% for output in DIN A4 use
-\usepackage{pgfpages}
-\pgfpagesuselayout{resize to}[a4paper]
+% set colors
+\ifwhitebackground
+  \colorlet{bgcolor}{white}
+  \colorlet{fgcolor}{black}
+\else
+  \colorlet{bgcolor}{black}
+  \colorlet{fgcolor}{white}
+\fi
 
+% set page background color
+\pagecolor{bgcolor}
+
+% page layout
+\usepackage{geometry}
+\geometry{
+  paperwidth = 847mm,
+  paperheight = 1195mm,
+  margin = 33mm,
+  bottom = 18mm,
+  right = 37mm,
+}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+
+% if output in DIN A4
+\ifaIVpaper
+  \usepackage{pgfpages}
+  \pgfpagesuselayout{resize to}[a4paper]
+\fi
+
+% load TikZ
 \usepackage{tikz}
-   \usetikzlibrary{arrows.meta}
+  \usetikzlibrary{arrows.meta}
 
+% load CSV reader
 \usepackage{csvsimple-l3}
 
+% load fonts
 \usepackage{fontspec}
-   \setmainfont[
-      FontFace = {lt}{n}{* Light},
-      FontFace = {lt}{it}{* Light Italic},
-   ]{Fira Sans}
-   \DeclareRobustCommand{\ltseries}{\fontseries{lt}\selectfont}
-   \DeclareTextFontCommand{\textlt}{\ltseries}
+  \setmainfont[
+    FontFace = {lt}{n}{* Light},
+    FontFace = {lt}{it}{* Light Italic},
+  ]{Fira Sans}
+  \DeclareRobustCommand{\ltseries}{\fontseries{lt}\selectfont}
+  \DeclareTextFontCommand{\textlt}{\ltseries}
 
+% load creative commons icons
 \usepackage{ccicons}
 
+% load hyperref
 \usepackage[hidelinks]{hyperref}
-   \urlstyle{same}
+  \urlstyle{same}
 
 % Tikz-Stile
 \tikzset{
-   % Pfeilspitze festlegen
-   > = {Triangle[length=2mm,width=1.2mm]},
-   % allg. Einstellungen für alle Nodes
-   every node/.style = {
-      inner sep = 0pt,
-      outer sep = 0pt,
-   },
-   % Node für Element-Symbol und -Name
-   symbol and name/.style = {
-      white,
-      font = \fontsize{20bp}{20bp}\selectfont,
-      anchor = base west,
-   },
-   % Linienbreite
-   every picture/.style = {
-      line width = 0.7pt,
-   },
-   % Stile für Skalenteile (in drei Abstufungen)
-   large tick/.style = {
-      white,
-   },
-   medium tick/.style = {
-      large tick,
-   },
-   small tick/.style = {
-      large tick,
-   },
-   % Stil für Skalenbeschriftung (nur bei Large)
-   tick label/.style = {
-      white,
-      font = \fontsize{14bp}{14bp}\selectfont,
-   },
-   % Spektrallinie
-   spectral line/.style = {
-      line width = 0.5mm,
-   },
-   % Fraunehofer Linie
-   frauenhofer major line/.style = {
-      line width = 0.75mm,
-      black,
-   },
-   frauenhofer minor line/.style = {
-      line width = 0.4mm,
-      black,
-   },
+  % Pfeilspitze festlegen
+  > = {Triangle[length=2mm,width=1.2mm]},
+  % allg. Einstellungen für alle Nodes
+  every node/.style = {
+    inner sep = 0pt,
+    outer sep = 0pt,
+  },
+  % Node für Element-Symbol und -Name
+  symbol and name/.style = {
+    fgcolor,
+    font = \fontsize{20bp}{20bp}\selectfont,
+    anchor = base west,
+  },
+  % Linienbreite
+  every picture/.style = {
+    line width = 0.7pt,
+  },
+  % Stile für Skalenteile (in drei Abstufungen)
+  large tick/.style = {
+    fgcolor,
+  },
+  medium tick/.style = {
+    large tick,
+  },
+  small tick/.style = {
+    large tick,
+  },
+  % Stil für Skalenbeschriftung (nur bei Large)
+  tick label/.style = {
+    fgcolor,
+    font = \fontsize{14bp}{14bp}\selectfont,
+  },
+  % Spektrallinie
+  spectral line/.style = {
+    line width = 0.5mm,
+  },
+  % Fraunehofer Linie
+  frauenhofer major line/.style = {
+    line width = 0.75mm,
+    black,
+  },
+  frauenhofer minor line/.style = {
+    line width = 0.4mm,
+    black,
+  },
 }
 
 \ExplSyntaxOn
@@ -107,13 +141,13 @@
 \dim_const:Nn \c_splns_intensity_spectrum_sep_dim { 1.5mm }
 %% Höhe des intensitätsUNabhänigen Spektrums
 \dim_const:Nn \c_splns_nonintensity_spectrum_height_dim {
-   \c_splns_spectrum_height_dim
-   - \c_splns_intensity_spectrum_sep_dim
-   - \c_splns_intensity_spectrum_height_dim
+  \c_splns_spectrum_height_dim
+  - \c_splns_intensity_spectrum_sep_dim
+  - \c_splns_intensity_spectrum_height_dim
 }
 %% Breite des Spektrums
 \fp_const:Nn \c_splns_spectrum_width_in_mm_fp
-   { \dim_to_decimal_in_unit:nn { \textwidth - 1mm } { 1mm } }% in mm
+  { \dim_to_decimal_in_unit:nn { \textwidth - 1mm } { 1mm } }% in mm
 %% Konstante für Lichtgeschwindigkeit
 \fp_const:Nn \c_splns_lightspeed_in_m_per_s_fp { 2.99792e8 }% in m/s
 %% Variablen für Wellenlängen
@@ -127,9 +161,9 @@
 \fp_const:Nn \c_splns_wavelength_in_nm_max_fp { 800 }% in nm
 %%% Skalenteil in mm berechnen
 \fp_const:Nn \c_splns_wavelength_xunit_in_mm_fp {% in mm
-   \c_splns_spectrum_width_in_mm_fp % Gesamtbreite in mm
-   /
-   (\c_splns_wavelength_in_nm_max_fp - \c_splns_wavelength_in_nm_min_fp)
+  \c_splns_spectrum_width_in_mm_fp % Gesamtbreite in mm
+  /
+  (\c_splns_wavelength_in_nm_max_fp - \c_splns_wavelength_in_nm_min_fp)
 }
 % Variablen für Frequenzen (abhängig von Wellenlängeneinstellungen)
 %%% Skalenteile
@@ -138,53 +172,53 @@
 \fp_const:Nn \c_splns_frequency_in_THz_small_step_fp { 5 }% in THz
 %%% Minimum
 \fp_const:Nn \c_splns_frequency_in_THz_min_fp {% in THz
-   \c_splns_lightspeed_in_m_per_s_fp
-   /
-   ( \c_splns_wavelength_in_nm_max_fp * 1e-9 )
-   * 1e-12
+  \c_splns_lightspeed_in_m_per_s_fp
+  /
+  ( \c_splns_wavelength_in_nm_max_fp * 1e-9 )
+  * 1e-12
 }
 % Minimum auf nächsten Skalenteil gerundet
 \pgfmathparse  {
-   \fp_use:N \c_splns_frequency_in_THz_min_fp
-   -
-   mod (
-      \fp_use:N \c_splns_frequency_in_THz_min_fp
-      ,
-      \fp_use:N \c_splns_frequency_in_THz_large_step_fp
-   )
-   +
-   \fp_use:N \c_splns_frequency_in_THz_large_step_fp
+  \fp_use:N \c_splns_frequency_in_THz_min_fp
+  -
+  mod (
+    \fp_use:N \c_splns_frequency_in_THz_min_fp
+    ,
+    \fp_use:N \c_splns_frequency_in_THz_large_step_fp
+  )
+  +
+  \fp_use:N \c_splns_frequency_in_THz_large_step_fp
 }
 \fp_const:Nn \c_splns_frequency_in_THz_min_rounded_fp {
-   \pgfmathresult
+  \pgfmathresult
 }
 %%% Maximum
 \fp_const:Nn \c_splns_frequency_in_THz_max_fp {% in THz
-   \c_splns_lightspeed_in_m_per_s_fp
-   /
-   ( \c_splns_wavelength_in_nm_min_fp * 1e-9 )
-   * 1e-12
+  \c_splns_lightspeed_in_m_per_s_fp
+  /
+  ( \c_splns_wavelength_in_nm_min_fp * 1e-9 )
+  * 1e-12
 }
 %%% Maximum auf nächsten Skalenteil gerundet
 \pgfmathparse  {
-   \fp_use:N \c_splns_frequency_in_THz_max_fp
-   -
-   mod (
-      \fp_use:N \c_splns_frequency_in_THz_max_fp
-      ,
-      \fp_use:N \c_splns_frequency_in_THz_large_step_fp
-   )
-   -
-   \fp_use:N \c_splns_frequency_in_THz_large_step_fp
+  \fp_use:N \c_splns_frequency_in_THz_max_fp
+  -
+  mod (
+    \fp_use:N \c_splns_frequency_in_THz_max_fp
+    ,
+    \fp_use:N \c_splns_frequency_in_THz_large_step_fp
+  )
+  -
+  \fp_use:N \c_splns_frequency_in_THz_large_step_fp
 }
 \fp_const:Nn \c_splns_frequency_in_THz_max_rounded_fp {
-   \pgfmathresult
+  \pgfmathresult
 }
 %%% Skalenteil in mm berechnen
 \fp_const:Nn \c_splns_frequency_xunit_in_mm_fp {% in mm
-   \c_splns_spectrum_width_in_mm_fp % Gesamtbreite in mm
-   /
-   (\c_splns_frequency_in_THz_max_fp - \c_splns_frequency_in_THz_min_fp)
+  \c_splns_spectrum_width_in_mm_fp % Gesamtbreite in mm
+  /
+  (\c_splns_frequency_in_THz_max_fp - \c_splns_frequency_in_THz_min_fp)
 }
 %% Variablen für die Intensität
 \fp_new:N \l_splns_intensity_min_fp
@@ -197,132 +231,132 @@
 % Befehl zum Umrechnen f -> λ mit direkter Ausgabe
 % - #1: Frequenz f in THz
 \cs_new:Nn \splns_use_frequency_in_THz_as_wavelength_in_nm:n {
-   \fp_eval:n { \c_splns_lightspeed_in_m_per_s_fp / ( #1 * 1e12 ) * 1e9 }
+  \fp_eval:n { \c_splns_lightspeed_in_m_per_s_fp / ( #1 * 1e12 ) * 1e9 }
 }
 \cs_generate_variant:Nn \splns_use_frequency_in_THz_as_wavelength_in_nm:n { V }
 
 % Befehl zum Ausgeben des Labels, des Rahmens und der Skala
 % - #1: Label
 \cs_new:Nn \splns_draw_name_and_scale:n {
-   % Symbol und Name
-   \node [ symbol~and~name ]
-      at (\fp_use:N \c_splns_wavelength_in_nm_max_fp,4.5mm)
-      {
-         \strut
-         #1
-      };
-   % Skala Wellenlänge
-   %% große Teilung
-   \fp_step_inline:nnnn
-      { \c_splns_wavelength_in_nm_min_fp + \c_splns_wavelength_in_nm_large_step_fp }
-      { \c_splns_wavelength_in_nm_large_step_fp }
-      { \c_splns_wavelength_in_nm_max_fp - \c_splns_wavelength_in_nm_large_step_fp}
-      {
-         \draw [large~tick] (##1,0) -- (##1,3)
-            node [large~tick, above=1.5mm, anchor=base] { \strut ##1 };
-      }
-   %% mittlere Teilung
-   \fp_step_inline:nnnn
-      { \c_splns_wavelength_in_nm_min_fp }
-      { \c_splns_wavelength_in_nm_medium_step_fp }
-      { \c_splns_wavelength_in_nm_max_fp}
-      {
-         \draw [medium~tick] (##1,0) -- (##1,3);
-      }
-   %% kleine Teilung
-   \fp_step_inline:nnnn
-      { \c_splns_wavelength_in_nm_min_fp }
-      { \c_splns_wavelength_in_nm_small_step_fp }
-      { \c_splns_wavelength_in_nm_max_fp}
-      {
-         \draw [small~tick] (##1,0) -- (##1,1.5);
-      }
-   %% Größe und Einheit
-   \node at (\fp_use:N \c_splns_wavelength_in_nm_min_fp,4.5mm) [large~tick, anchor=base~east] {
-      \strut \bfseries \textit{λ}~in~nm
-   };
-   % Skala Frequenz
-   %% große Teilung
-   \fp_step_inline:nnnn
-      { \c_splns_frequency_in_THz_min_rounded_fp }
-      { \c_splns_frequency_in_THz_large_step_fp }
-      { \c_splns_frequency_in_THz_max_rounded_fp }
-      {
-         \draw [large~tick]
-            (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
-               -\dim_use:N \c_splns_spectrum_height_dim)
-            -- ++(0,-3)
-            node [large~tick, below=3.75mm, anchor = base] { \strut ##1 };
-      }
-   %% mittlere Teilung
-   \fp_step_inline:nnnn
-      { \c_splns_frequency_in_THz_min_rounded_fp }
-      { \c_splns_frequency_in_THz_medium_step_fp }
-      { \c_splns_frequency_in_THz_max_rounded_fp}
-      {
-         \draw [medium~tick]
-            (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
-               -\dim_use:N \c_splns_spectrum_height_dim)
-            -- ++(0,-3);
-      }
-   \fp_step_inline:nnnn
-      { \c_splns_frequency_in_THz_min_rounded_fp }
-      { -\c_splns_frequency_in_THz_medium_step_fp }
-      { \c_splns_frequency_in_THz_min_fp}
-      {
-         \draw [medium~tick]
-            (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
-               -\dim_use:N \c_splns_spectrum_height_dim)
-            -- ++(0,-3);
-      }
-   \fp_step_inline:nnnn
-      { \c_splns_frequency_in_THz_max_rounded_fp }
-      { \c_splns_frequency_in_THz_medium_step_fp }
-      { \c_splns_frequency_in_THz_max_fp}
-      {
-         \draw [medium~tick]
-            (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
-               -\dim_use:N \c_splns_spectrum_height_dim)
-            -- ++(0,-3);
-      }
-   %% kleine Teilung
-   \fp_step_inline:nnnn
-      { \c_splns_frequency_in_THz_min_rounded_fp }
-      { \c_splns_frequency_in_THz_small_step_fp }
-      { \c_splns_frequency_in_THz_max_rounded_fp}
-      {
-         \draw [small~tick]
-            (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
-               -\dim_use:N \c_splns_spectrum_height_dim)
-            -- ++(0,-1.5);
-      }
-   \fp_step_inline:nnnn
-      { \c_splns_frequency_in_THz_min_rounded_fp }
-      { -\c_splns_frequency_in_THz_small_step_fp }
-      { \c_splns_frequency_in_THz_min_fp}
-      {
-         \draw [small~tick]
-            (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
-               -\dim_use:N \c_splns_spectrum_height_dim)
-            -- ++(0,-1.5);
-      }
-   \fp_step_inline:nnnn
-      { \c_splns_frequency_in_THz_max_rounded_fp }
-      { \c_splns_frequency_in_THz_small_step_fp }
-      { \c_splns_frequency_in_THz_max_fp}
-      {
-         \draw [small~tick]
-            (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
-               -\dim_use:N \c_splns_spectrum_height_dim)
-            -- ++(0,-1.5);
-      }
-   %% Größe und Einheit
-   \node at
-      (\fp_use:N \c_splns_wavelength_in_nm_min_fp,
-         -\dim_use:N \c_splns_spectrum_height_dim)
-      [large~tick, below = 6.75mm, anchor = base~east] {
-      \strut \bfseries \textit{f}~in~THz
-   };
+  % Symbol und Name
+  \node [ symbol~and~name ]
+    at (\fp_use:N \c_splns_wavelength_in_nm_max_fp,4.5mm)
+    {
+      \strut
+      #1
+    };
+  % Skala Wellenlänge
+  %% große Teilung
+  \fp_step_inline:nnnn
+    { \c_splns_wavelength_in_nm_min_fp + \c_splns_wavelength_in_nm_large_step_fp }
+    { \c_splns_wavelength_in_nm_large_step_fp }
+    { \c_splns_wavelength_in_nm_max_fp - \c_splns_wavelength_in_nm_large_step_fp}
+    {
+      \draw [large~tick] (##1,0) -- (##1,3)
+        node [large~tick, above=1.5mm, anchor=base] { \strut ##1 };
+    }
+  %% mittlere Teilung
+  \fp_step_inline:nnnn
+    { \c_splns_wavelength_in_nm_min_fp }
+    { \c_splns_wavelength_in_nm_medium_step_fp }
+    { \c_splns_wavelength_in_nm_max_fp}
+    {
+      \draw [medium~tick] (##1,0) -- (##1,3);
+    }
+  %% kleine Teilung
+  \fp_step_inline:nnnn
+    { \c_splns_wavelength_in_nm_min_fp }
+    { \c_splns_wavelength_in_nm_small_step_fp }
+    { \c_splns_wavelength_in_nm_max_fp}
+    {
+      \draw [small~tick] (##1,0) -- (##1,1.5);
+    }
+  %% Größe und Einheit
+  \node at (\fp_use:N \c_splns_wavelength_in_nm_min_fp,4.5mm) [large~tick, anchor=base~east] {
+    \strut \bfseries \textit{λ}~in~nm
+  };
+  % Skala Frequenz
+  %% große Teilung
+  \fp_step_inline:nnnn
+    { \c_splns_frequency_in_THz_min_rounded_fp }
+    { \c_splns_frequency_in_THz_large_step_fp }
+    { \c_splns_frequency_in_THz_max_rounded_fp }
+    {
+      \draw [large~tick]
+        (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
+          -\dim_use:N \c_splns_spectrum_height_dim)
+        -- ++(0,-3)
+        node [large~tick, below=3.75mm, anchor = base] { \strut ##1 };
+    }
+  %% mittlere Teilung
+  \fp_step_inline:nnnn
+    { \c_splns_frequency_in_THz_min_rounded_fp }
+    { \c_splns_frequency_in_THz_medium_step_fp }
+    { \c_splns_frequency_in_THz_max_rounded_fp}
+    {
+      \draw [medium~tick]
+        (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
+          -\dim_use:N \c_splns_spectrum_height_dim)
+        -- ++(0,-3);
+    }
+  \fp_step_inline:nnnn
+    { \c_splns_frequency_in_THz_min_rounded_fp }
+    { -\c_splns_frequency_in_THz_medium_step_fp }
+    { \c_splns_frequency_in_THz_min_fp}
+    {
+      \draw [medium~tick]
+        (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
+          -\dim_use:N \c_splns_spectrum_height_dim)
+        -- ++(0,-3);
+    }
+  \fp_step_inline:nnnn
+    { \c_splns_frequency_in_THz_max_rounded_fp }
+    { \c_splns_frequency_in_THz_medium_step_fp }
+    { \c_splns_frequency_in_THz_max_fp}
+    {
+      \draw [medium~tick]
+        (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
+          -\dim_use:N \c_splns_spectrum_height_dim)
+        -- ++(0,-3);
+    }
+  %% kleine Teilung
+  \fp_step_inline:nnnn
+    { \c_splns_frequency_in_THz_min_rounded_fp }
+    { \c_splns_frequency_in_THz_small_step_fp }
+    { \c_splns_frequency_in_THz_max_rounded_fp}
+    {
+      \draw [small~tick]
+        (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
+          -\dim_use:N \c_splns_spectrum_height_dim)
+        -- ++(0,-1.5);
+    }
+  \fp_step_inline:nnnn
+    { \c_splns_frequency_in_THz_min_rounded_fp }
+    { -\c_splns_frequency_in_THz_small_step_fp }
+    { \c_splns_frequency_in_THz_min_fp}
+    {
+      \draw [small~tick]
+        (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
+          -\dim_use:N \c_splns_spectrum_height_dim)
+        -- ++(0,-1.5);
+    }
+  \fp_step_inline:nnnn
+    { \c_splns_frequency_in_THz_max_rounded_fp }
+    { \c_splns_frequency_in_THz_small_step_fp }
+    { \c_splns_frequency_in_THz_max_fp}
+    {
+      \draw [small~tick]
+        (\splns_use_frequency_in_THz_as_wavelength_in_nm:n { ##1 },
+          -\dim_use:N \c_splns_spectrum_height_dim)
+        -- ++(0,-1.5);
+    }
+  %% Größe und Einheit
+  \node at
+    (\fp_use:N \c_splns_wavelength_in_nm_min_fp,
+      -\dim_use:N \c_splns_spectrum_height_dim)
+    [large~tick, below = 6.75mm, anchor = base~east] {
+    \strut \bfseries \textit{f}~in~THz
+  };
 }
 
 % Befehlsvarianten
@@ -331,250 +365,278 @@
 
 % Befehl zur Ausgabe eines Spektrums
 % - #1: CSV-Datei von https://physics.nist.gov/PhysRefData/ASD/lines_form.html
-%       als „Tab-delimted“ formatiert und mit eingeschränktem Wellenlängenbereich
-%       wie oben bei Min/Max definiert.
+%     als „Tab-delimted“ formatiert und mit eingeschränktem Wellenlängenbereich
+%     wie oben bei Min/Max definiert.
 % - #2: Elementsymbol
 % - #3: Elementname
 \NewDocumentCommand { \drawlinespactra } { m m m } {
-   % minimale und maximale Intensität feststellen
-   \fp_set:Nn \l_splns_intensity_min_fp { inf }
-   \fp_set:Nn \l_splns_intensity_max_fp { 0 }
-   \bool_if:NT \l_splns_show_spectra_bool {
+  % minimale und maximale Intensität feststellen
+  \fp_set:Nn \l_splns_intensity_min_fp { inf }
+  \fp_set:Nn \l_splns_intensity_max_fp { 0 }
+  \bool_if:NT \l_splns_show_spectra_bool {
+    \csvreader [
+      separator = tab,
+      respect~underscore,
+      respect~circumflex,
+      filter~expr = {
+        test { \ifcsvnotstrcmp { \intensity } { "" } }
+        and
+        test { \ifcsvnotstrcmp { \wavelength } { "" } }
+      },
+    ] {
+      #1
+    } {
+      obs_wl_air(nm) = \wavelength,
+      intens = \intensity
+    } {
+      % Intensität parsen
+      \regex_extract_all:nVN { \d+ } \intensity \l_tmpa_seq
+      \seq_pop_left:NN \l_tmpa_seq \l_tpma_tl
+      \quark_if_no_value:NF \l_tpma_tl {
+        \fp_set:NV \l_splns_intensity_input_fp \l_tpma_tl
+        % Minimum und Maximum testen
+        \fp_compare:nT { \l_splns_intensity_input_fp < \l_splns_intensity_min_fp } {
+          \fp_set_eq:NN \l_splns_intensity_min_fp \l_splns_intensity_input_fp
+        }
+        \fp_compare:nT { \l_splns_intensity_input_fp > \l_splns_intensity_max_fp } {
+          \fp_set_eq:NN \l_splns_intensity_max_fp \l_splns_intensity_input_fp
+        }
+      }
+    }
+    % Faktor für Sichtbarkeit festlegen
+    \fp_set:Nn \l_splns_intensity_opacity_factor_fp {
+      1
+      /
+      ( \l_splns_intensity_max_fp - \l_splns_intensity_min_fp )
+    }
+    \fp_set:Nn \l_splns_intensity_opacity_shift_fp {
+      \l_splns_intensity_opacity_factor_fp
+      *
+      \l_splns_intensity_min_fp
+    }
+  }
+  % Ausgabe
+  \begin{tikzpicture}[
+    x = -\fp_use:N \c_splns_wavelength_xunit_in_mm_fp mm,
+    y = 1mm,
+    remember~picture,
+  ]
+    % Hintergrund für intensitätsabhängiges Spektrum
+    \fill [black]
+      (\fp_use:N \c_splns_wavelength_in_nm_min_fp,0)
+      rectangle
+      (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
+        -\dim_use:N \c_splns_intensity_spectrum_height_dim);
+    % Hintergrund für intensitätsunabhängiges Spektrum
+    \fill [black]
+      (\fp_use:N \c_splns_wavelength_in_nm_min_fp,
+        -\dim_use:N \c_splns_intensity_spectrum_height_dim
+        -\dim_use:N \c_splns_intensity_spectrum_sep_dim)
+      rectangle
+      (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
+        -\dim_use:N \c_splns_intensity_spectrum_height_dim
+        -\dim_use:N \c_splns_intensity_spectrum_sep_dim
+        -\dim_use:N \c_splns_nonintensity_spectrum_height_dim);
+    % Spektrum ausgeben
+    \bool_if:NT \l_splns_show_spectra_bool {
       \csvreader [
-         separator = tab,
-         respect~underscore,
-         respect~circumflex,
-         filter~expr = {
-            test { \ifcsvnotstrcmp { \intensity } { "" } }
-            and
-            test { \ifcsvnotstrcmp { \wavelength } { "" } }
-         },
+        separator = tab,
+        respect~underscore,
+        respect~circumflex,
+        filter~expr = {
+          test { \ifcsvnotstrcmp { \intensity } { "" } }
+          and
+          test { \ifcsvnotstrcmp { \wavelength } { "" } }
+        },
       ] {
-         #1
+        #1
       } {
-         obs_wl_air(nm) = \wavelength,
-         intens = \intensity
+        obs_wl_air(nm) = \wavelength,
+        intens = \intensity
       } {
-         % Intensität parsen
-         \regex_extract_all:nVN { \d+ } \intensity \l_tmpa_seq
-         \seq_pop_left:NN \l_tmpa_seq \l_tpma_tl
-         \quark_if_no_value:NF \l_tpma_tl {
-            \fp_set:NV \l_splns_intensity_input_fp \l_tpma_tl
-            % Minimum und Maximum testen
-            \fp_compare:nT { \l_splns_intensity_input_fp < \l_splns_intensity_min_fp } {
-               \fp_set_eq:NN \l_splns_intensity_min_fp \l_splns_intensity_input_fp
-            }
-            \fp_compare:nT { \l_splns_intensity_input_fp > \l_splns_intensity_max_fp } {
-               \fp_set_eq:NN \l_splns_intensity_max_fp \l_splns_intensity_input_fp
-            }
-         }
+        % Wellenlänge parsen
+        \tl_set:No \l_splns_wavelength_in_nm_input_tl { \wavelength }
+        \tl_remove_all:Nn \l_splns_wavelength_in_nm_input_tl { " }
+        \definecolor { current-wl } { wave } { \l_splns_wavelength_in_nm_input_tl }
+        % Intensität parsen
+        \regex_extract_all:nVN { \d+ } \intensity \l_tmpa_seq
+        \seq_pop_left:NN \l_tmpa_seq \l_tpma_tl
+        \quark_if_no_value:NF \l_tpma_tl {
+          \fp_set:NV \l_splns_intensity_input_fp \l_tpma_tl
+          \fp_set:Nn \l_splns_intensity_opacity_fp {
+            round(\l_splns_intensity_opacity_factor_fp
+            *
+            \l_splns_intensity_input_fp
+            -
+            \l_splns_intensity_opacity_shift_fp,3)
+          }
+          % Info in Log
+          \iow_term:x { Drawing~wave~length~\l_splns_wavelength_in_nm_input_tl nm~of~#2~... }
+          % Linie ausgeben
+          \draw [
+            spectral~line,
+            current-wl,
+          ]
+            (\l_splns_wavelength_in_nm_input_tl,
+              -\c_splns_intensity_spectrum_height_dim)
+            -- ++(0,
+              \fp_use:N \l_splns_intensity_opacity_fp
+              * \dim_use:N \c_splns_intensity_spectrum_height_dim);
+        }
+        % Linie für λ unabhängig von Intensität
+        \draw [
+          spectral~line,
+          current-wl,
+        ]
+          (\l_splns_wavelength_in_nm_input_tl,
+            -\dim_use:N \c_splns_spectrum_height_dim)
+          -- ++(0,\dim_use:N \c_splns_nonintensity_spectrum_height_dim);
       }
-      % Faktor für Sichtbarkeit festlegen
-      \fp_set:Nn \l_splns_intensity_opacity_factor_fp {
-         1
-         /
-         ( \l_splns_intensity_max_fp - \l_splns_intensity_min_fp )
-      }
-      \fp_set:Nn \l_splns_intensity_opacity_shift_fp {
-         \l_splns_intensity_opacity_factor_fp
-         *
-         \l_splns_intensity_min_fp
-      }
-   }
-   % Ausgabe
-   \begin{tikzpicture}[
-      x = -\fp_use:N \c_splns_wavelength_xunit_in_mm_fp mm,
-      y = 1mm,
-      remember~picture,
-   ]
-      % Spektrum ausgeben
-      \bool_if:NT \l_splns_show_spectra_bool {
-         \csvreader [
-            separator = tab,
-            respect~underscore,
-            respect~circumflex,
-            filter~expr = {
-               test { \ifcsvnotstrcmp { \intensity } { "" } }
-               and
-               test { \ifcsvnotstrcmp { \wavelength } { "" } }
-            },
-         ] {
-            #1
-         } {
-            obs_wl_air(nm) = \wavelength,
-            intens = \intensity
-         } {
-            % Wellenlänge parsen
-            \tl_set:No \l_splns_wavelength_in_nm_input_tl { \wavelength }
-            \tl_remove_all:Nn \l_splns_wavelength_in_nm_input_tl { " }
-            \definecolor { current-wl } { wave } { \l_splns_wavelength_in_nm_input_tl }
-            % Intensität parsen
-            \regex_extract_all:nVN { \d+ } \intensity \l_tmpa_seq
-            \seq_pop_left:NN \l_tmpa_seq \l_tpma_tl
-            \quark_if_no_value:NF \l_tpma_tl {
-               \fp_set:NV \l_splns_intensity_input_fp \l_tpma_tl
-               \fp_set:Nn \l_splns_intensity_opacity_fp {
-                  round(\l_splns_intensity_opacity_factor_fp
-                  *
-                  \l_splns_intensity_input_fp
-                  -
-                  \l_splns_intensity_opacity_shift_fp,3)
-               }
-               % Info in Log
-               \iow_term:x { Drawing~wave~length~\l_splns_wavelength_in_nm_input_tl nm~of~#2~... }
-               % Linie ausgeben
-               \draw [
-                  spectral~line,
-                  current-wl,
-               ]
-                  (\l_splns_wavelength_in_nm_input_tl,
-                     -\c_splns_intensity_spectrum_height_dim)
-                  -- ++(0,
-                     \fp_use:N \l_splns_intensity_opacity_fp
-                     * \dim_use:N \c_splns_intensity_spectrum_height_dim);
-            }
-            % Linie für λ unabhängig von Intensität
-            \draw [
-               spectral~line,
-               current-wl,
-            ]
-               (\l_splns_wavelength_in_nm_input_tl,
-                  -\dim_use:N \c_splns_spectrum_height_dim)
-               -- ++(0,\dim_use:N \c_splns_nonintensity_spectrum_height_dim);
-         }
-      }
-      % Skala, Titel ausgeben
-      \splns_draw_name_and_scale:n { \textbf { #2 } \quad #3 }
-      % Rahmen für intensitätsabhängiges Spektrum
-      \draw [white]
-         (\fp_use:N \c_splns_wavelength_in_nm_min_fp,0)
-         rectangle
-         (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
-            -\dim_use:N \c_splns_intensity_spectrum_height_dim);
-      % Rahmen für intensitätsunabhängiges Spektrum
-      \draw [white]
-         (\fp_use:N \c_splns_wavelength_in_nm_min_fp,
-            -\dim_use:N \c_splns_intensity_spectrum_height_dim
-            -\dim_use:N \c_splns_intensity_spectrum_sep_dim)
-         rectangle
-         (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
-            -\dim_use:N \c_splns_intensity_spectrum_height_dim
-            -\dim_use:N \c_splns_intensity_spectrum_sep_dim
-            -\dim_use:N \c_splns_nonintensity_spectrum_height_dim);
-      % Koordinaten für spätere Referenzierung
-      \coordinate (#2-intensity-spectrum) at
-         (\fp_use:N \c_splns_wavelength_in_nm_min_fp,
-            -0.5 * \dim_use:N \c_splns_intensity_spectrum_height_dim);
-      \coordinate (#2-nonintensity-spectrum) at
-         (\fp_use:N \c_splns_wavelength_in_nm_min_fp,
-            -\dim_use:N \c_splns_intensity_spectrum_height_dim
-            -\dim_use:N \c_splns_intensity_spectrum_sep_dim
-            -0.5*\dim_use:N \c_splns_nonintensity_spectrum_height_dim);
-   \end{tikzpicture}
+    }
+    % Skala, Titel ausgeben
+    \splns_draw_name_and_scale:n { \textbf { #2 } \quad #3 }
+    % Rahmen für intensitätsabhängiges Spektrum
+    \draw [fgcolor]
+      (\fp_use:N \c_splns_wavelength_in_nm_min_fp,0)
+      rectangle
+      (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
+        -\dim_use:N \c_splns_intensity_spectrum_height_dim);
+    % Rahmen für intensitätsunabhängiges Spektrum
+    \draw [fgcolor]
+      (\fp_use:N \c_splns_wavelength_in_nm_min_fp,
+        -\dim_use:N \c_splns_intensity_spectrum_height_dim
+        -\dim_use:N \c_splns_intensity_spectrum_sep_dim)
+      rectangle
+      (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
+        -\dim_use:N \c_splns_intensity_spectrum_height_dim
+        -\dim_use:N \c_splns_intensity_spectrum_sep_dim
+        -\dim_use:N \c_splns_nonintensity_spectrum_height_dim);
+    % Koordinaten für spätere Referenzierung
+    \coordinate (#2-intensity-spectrum) at
+      (\fp_use:N \c_splns_wavelength_in_nm_min_fp,
+        -0.5 * \dim_use:N \c_splns_intensity_spectrum_height_dim);
+    \coordinate (#2-nonintensity-spectrum) at
+      (\fp_use:N \c_splns_wavelength_in_nm_min_fp,
+        -\dim_use:N \c_splns_intensity_spectrum_height_dim
+        -\dim_use:N \c_splns_intensity_spectrum_sep_dim
+        -0.5*\dim_use:N \c_splns_nonintensity_spectrum_height_dim);
+  \end{tikzpicture}
 }
 
 % interner Befehl, um kontinuierliches Spektrum zu zeichnen
 \cs_new:Nn \splns_draw_full_spectrum: {
-   \bool_if:NT \l_splns_show_spectra_bool {
-      \fp_step_inline:nnnn
-         { \c_splns_wavelength_in_nm_min_fp }
-         { 0.1 * \c_splns_wavelength_in_nm_small_step_fp }
-         { \c_splns_wavelength_in_nm_max_fp}
-         {
-            \definecolor { current-wl } { wave } { ##1 }
-            \draw [
-               spectral~line,
-               current-wl,
-            ]
-               (##1,0)
-               -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
-         }
-   }
+  \bool_if:NT \l_splns_show_spectra_bool {
+    \fp_step_inline:nnnn
+      { \c_splns_wavelength_in_nm_min_fp }
+      { 0.1 * \c_splns_wavelength_in_nm_small_step_fp }
+      { \c_splns_wavelength_in_nm_max_fp}
+      {
+        \definecolor { current-wl } { wave } { ##1 }
+        \draw [
+          spectral~line,
+          current-wl,
+        ]
+          (##1,0)
+          -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
+      }
+  }
 }
 
 % Befehl, um kontinuierliches Spektrum zu zeichnen
 \NewDocumentCommand { \drawfullspectrum } { } {
-   \begin{tikzpicture}[
-      x = -\fp_use:N \c_splns_wavelength_xunit_in_mm_fp mm,
-      y = 1mm,
-   ]
-      % Spektrum ausgeben
-      \splns_draw_full_spectrum:
-      % Skala, Titel ausgeben
-      \splns_draw_name_and_scale:n { }
-      % Rahmen
-      \draw [white]
-         (\fp_use:N \c_splns_wavelength_in_nm_min_fp,0)
-         rectangle
-         (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
-            -\dim_use:N \c_splns_spectrum_height_dim);
-   \end{tikzpicture}
+  \begin{tikzpicture}[
+    x = -\fp_use:N \c_splns_wavelength_xunit_in_mm_fp mm,
+    y = 1mm,
+  ]
+    % Hintergrund
+    \fill [black]
+      (\fp_use:N \c_splns_wavelength_in_nm_min_fp,0)
+      rectangle
+      (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
+        -\dim_use:N \c_splns_spectrum_height_dim);
+    % Spektrum ausgeben
+    \splns_draw_full_spectrum:
+    % Skala, Titel ausgeben
+    \splns_draw_name_and_scale:n { }
+    % Rahmen
+    \draw [fgcolor]
+      (\fp_use:N \c_splns_wavelength_in_nm_min_fp,0)
+      rectangle
+      (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
+        -\dim_use:N \c_splns_spectrum_height_dim);
+  \end{tikzpicture}
 }
 
 % Befehl, um Sonnenspektrum zu zeichnen
 \NewDocumentCommand { \drawsolarspectrum } { } {
-   \begin{tikzpicture}[
-      x = -\fp_use:N \c_splns_wavelength_xunit_in_mm_fp mm,
-      y = 1mm,
-   ]
-      % Spektrum ausgeben
-      \splns_draw_full_spectrum:
-      % Fraunhofer Linien hinzufügen
-      % Quelle: https://de.wikipedia.org/wiki/Fraunhoferlinie (2021-12-05)
-      \bool_if:NT \l_splns_show_spectra_bool {
-         \clist_set:Nn \l_tmpa_clist { 358.121, 382.044, 393.368, 396.847,
-            430.774, 430.790, 486.134, 527.039, 587.562, 589.594, 656.281,
-            686.719, 759.370 }
-         \clist_map_inline:Nn \l_tmpa_clist {
-            \draw [
-               frauenhofer~major~line,
-            ]
-               (##1,0)
-               -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
-         }
-         \clist_set:Nn \l_tmpa_clist { 410.175, 434.047, 438.355, 466.814,
-            495.761, 516.733, 516.751, 516.891, 517.270, 518.362, 546.073,
-            588.997, 627.661 }
-         \clist_map_inline:Nn \l_tmpa_clist {
-            \draw [
-               frauenhofer~minor~line,
-            ]
-               (##1,0)
-               -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
-         }
+  \begin{tikzpicture}[
+    x = -\fp_use:N \c_splns_wavelength_xunit_in_mm_fp mm,
+    y = 1mm,
+  ]
+    % Hintergrund
+    \fill [black]
+      (\fp_use:N \c_splns_wavelength_in_nm_min_fp,0)
+      rectangle
+      (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
+        -\dim_use:N \c_splns_spectrum_height_dim);
+    % Spektrum ausgeben
+    \splns_draw_full_spectrum:
+    % Fraunhofer Linien hinzufügen
+    % Quelle: https://de.wikipedia.org/wiki/Fraunhoferlinie (2021-12-05)
+    \bool_if:NT \l_splns_show_spectra_bool {
+      \clist_set:Nn \l_tmpa_clist { 358.121, 382.044, 393.368, 396.847,
+        430.774, 430.790, 486.134, 527.039, 587.562, 589.594, 656.281,
+        686.719, 759.370 }
+      \clist_map_inline:Nn \l_tmpa_clist {
+        \draw [
+          frauenhofer~major~line,
+        ]
+          (##1,0)
+          -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
       }
-      % Skala, Titel ausgeben
-      \splns_draw_name_and_scale:n { }
-      % Rahmen
-      \draw [white]
-         (\fp_use:N \c_splns_wavelength_in_nm_min_fp,0)
-         rectangle
-         (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
-            -\dim_use:N \c_splns_spectrum_height_dim);
-   \end{tikzpicture}
+      \clist_set:Nn \l_tmpa_clist { 410.175, 434.047, 438.355, 466.814,
+        495.761, 516.733, 516.751, 516.891, 517.270, 518.362, 546.073,
+        588.997, 627.661 }
+      \clist_map_inline:Nn \l_tmpa_clist {
+        \draw [
+          frauenhofer~minor~line,
+        ]
+          (##1,0)
+          -- ++(0,-\dim_use:N \c_splns_spectrum_height_dim);
+      }
+    }
+    % Skala, Titel ausgeben
+    \splns_draw_name_and_scale:n { }
+    % Rahmen
+    \draw [fgcolor]
+      (\fp_use:N \c_splns_wavelength_in_nm_min_fp,0)
+      rectangle
+      (\fp_use:N \c_splns_wavelength_in_nm_max_fp,
+        -\dim_use:N \c_splns_spectrum_height_dim);
+  \end{tikzpicture}
 }
 
 % Befehl für Überschriften
 % - #1: Überschrift
 \NewDocumentCommand { \minisec } { m } {
-   \par\vspace{8mm}
-   {  
-      \bfseries\fontsize{28}{32}
-      \selectfont
-      #1
-   }\par
-   \vspace{-0.5\parskip}
+  \par\vspace{8mm}
+  {  
+    \bfseries\fontsize{28}{32}
+    \selectfont
+    #1
+  }\par
+  \vspace{-0.5\parskip}
 }
 
 \ExplSyntaxOff
 
 \begin{document}
-\color{white}
+\color{fgcolor}
 % Titel
 {
-   \fontsize{60}{66}\selectfont
-   \textlt{Es werde Licht}\par
-   \textbf{Spektraltafel}\par
+  \fontsize{60}{66}\selectfont
+  \textlt{Es werde Licht}\par
+  \textbf{Spektraltafel}\par
 }
 \vspace{12mm}
 
@@ -595,21 +657,21 @@
 \drawlinespactra{spektren/he.csv}{He}{Helium}
 
 \begin{tikzpicture}[
-   remember picture,
-   overlay,
-   white,
-   <-,
-   shorten < = 0.5mm,
-   shorten > = 1mm,
-   line width = 1pt,
+  remember picture,
+  overlay,
+  fgcolor,
+  <-,
+  shorten < = 0.5mm,
+  shorten > = 1mm,
+  line width = 1pt,
 ]
-   \draw (He-intensity-spectrum) -| ++(12mm,7mm)
-      node [rotate = 90, anchor=west]
-         {hier repräsentiert die Höhe einer Linie die relative Intensität};
-   \draw (He-nonintensity-spectrum) -| ++(12mm,-7mm)
-      node [rotate = 90, anchor=east]
-      {hier sind alle beobachtbaren Spektrallinien unabhängig von ihrer
-         Intensität aufgetragen};
+  \draw (He-intensity-spectrum) -| ++(12mm,7mm)
+    node [rotate = 90, anchor=west]
+      {hier repräsentiert die Höhe einer Linie die relative Intensität};
+  \draw (He-nonintensity-spectrum) -| ++(12mm,-7mm)
+    node [rotate = 90, anchor=east]
+    {hier sind alle beobachtbaren Spektrallinien unabhängig von ihrer
+      Intensität aufgetragen};
 \end{tikzpicture}
 
 \drawlinespactra{spektren/ne.csv}{Ne}{Neon}
@@ -646,13 +708,13 @@
 
 \vfill
 Daten zu Fraunhoferlinien: \url{https://de.wikipedia.org/wiki/Fraunhoferlinie},
-   abgerufen am 5. Dezember 2021.
+  abgerufen am 5. Dezember 2021.
 \hfill
 Gestaltung: Herr W\_, herrw.de\\
 Daten zu Spektrallinien: \url{https://physics.nist.gov/PhysRefData/ASD/lines_form.html},
-   abgerufen am 4. Dezember 2021.
+  abgerufen am 4. Dezember 2021.
 \hfill
-\href{https://github.com/tweh/spektrallinien}{Spektrallinien} (v1.1) © 2021, \href{https://herrw.de}{Tobi Weh}, lizenziert als \href{http://creativecommons.org/licenses/by-nc-sa/4.0/}
-   {CC BY-NC-SA 4.0} \raisebox{0.17ex}{\ccbyncsa}
+\href{https://github.com/tweh/spektrallinien}{Spektrallinien} (v1.3) © 2023, \href{https://herrw.de}{Tobi Weh}, lizenziert als \href{http://creativecommons.org/licenses/by-nc-sa/4.0/}
+  {CC BY-NC-SA 4.0} \raisebox{0.17ex}{\ccbyncsa}
 \end{document}
 
